@@ -18,7 +18,7 @@ import { decrypt, md5 } from '@/common/util/crypto';
 import { Api, JsonRpc } from 'eosjs';
 import { Auth, AuthAccount, AuthorizedData } from '@/types/account';
 import { Wallet } from '@/types/wallet';
-import { eosChainId } from '@/common/util/network';
+import { eosChainId, dfsChainId } from '@/common/util/network';
 import { getContractAbi } from '@/common/util/abi';
 
 console.log('add listeners', (new Date().toLocaleString()));
@@ -500,7 +500,7 @@ async function deserializeTransactionWithActions(chainId: string, buffer: Buffer
     return api.deserializeTransactionWithActions(buffer);
 }
 
-async function tempApi(chainId: string = eosChainId) : Promise<Api> {
+async function tempApi(chainId: string = dfsChainId) : Promise<Api> {
     // create empty api
     const endpoint = await getEndPoint(chainId);
     const api = new Api({

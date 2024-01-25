@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { eosChainId } from '@/common/util/network';
+import { eosChainId, dfsChainId } from '@/common/util/network';
 
 const showExportWallet = ref(false);
 const showDestroyWallet = ref(false);
@@ -10,7 +10,7 @@ const router = useRouter();
 const handleAccountManage = () => {
     // 直接跳转当前账号公链的账号列表
     let currentChainId = useChainStore().currentChainId;
-    if (!currentChainId) currentChainId = eosChainId;
+    if (!currentChainId) currentChainId = dfsChainId;
 
     router.push({
         name: 'account-manage',

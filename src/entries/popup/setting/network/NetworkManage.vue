@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { eosChainId } from '@/common/util/network';
+import { eosChainId, dfsChainId } from '@/common/util/network';
 import { Network } from '@/types/settings';
 import _ from 'lodash';
 
@@ -65,7 +65,7 @@ const removeNetwork = async (network: Network) => {
                                 size="20"
                                 fill="#e53e30"
                                 :strokeWidth="3"
-                                v-show="item.chainId != eosChainId"
+                                v-show="item.chainId != dfsChainId"
                                 @click="handleRemove(item)"
                             />
                         </div>

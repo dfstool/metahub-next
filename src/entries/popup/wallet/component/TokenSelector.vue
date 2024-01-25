@@ -17,7 +17,6 @@ const tokenList = ref<Balance[]>([]);
 watch(
     () => props.isShow,
     (newValue, oldValue) => {
-        console.log(newValue, chainTokens.length);
         if (newValue && chainTokens.length == 0) {
             initTokens();
         }
@@ -38,7 +37,6 @@ const initTokens = () => {
     let tokens: Balance[] = [];
     chainTokens = [];
     for (const chainToken of walletStore.chainTokens) {
-        console.log(chainToken);
         if (chainToken.contract == 'eosio.token') {
             continue;
         }
@@ -95,6 +93,7 @@ const handleAddToken = async (token: Balance) => {
             (x: Coin) => x.contract == token.contract && x.symbol == token.symbol
         );
         walletStore.currentUserTokens.splice(index, 1);
+        walletStore.setUserTokens(walletStore.userTokens);
         token.isShow = false;
     } else {
         const newToken = {
@@ -108,7 +107,6 @@ const handleAddToken = async (token: Balance) => {
         walletStore.setCurrentUserTokens([...walletStore.currentUserTokens, newToken]);
         token.isShow = true;
     }
-    walletStore.setUserTokens(walletStore.userTokens);
 };
 </script>
 

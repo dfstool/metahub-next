@@ -4,6 +4,7 @@ import { eosChainId } from '@/common/util/network';
 import { ResourceBase, ResourceData } from '@/types/resouse';
 import { toInteger } from 'lodash';
 
+const { currentNetwork } = useChainStore();
 // 初始化
 const showResBox = ref(true);
 const walletStore = useWalletStore();
@@ -35,7 +36,7 @@ const stakeList = ref([] as any);
 const ramprice = ref(0);
 
 const memory: ResourceBase = reactive({
-    core_liquid_balance: '0.0000 EOS',
+    core_liquid_balance: (0).toFixed(currentNetwork.token.precision) + ' ' + currentNetwork.token.symbol,
     use_percentage: 0,
     use_limit: {
         max: 0,
@@ -43,7 +44,7 @@ const memory: ResourceBase = reactive({
     },
 });
 
-const emptyCoin = '0.0000 ' + useChainStore().currentSymbol;
+const emptyCoin = (0).toFixed(currentNetwork.token.precision) + ' ' + useChainStore().currentSymbol;
 const empayRefund = { amount: 0, request_time: 0, left_time: '' };
 const emptyResourceData: ResourceData = {
     core_liquid_balance: emptyCoin,
@@ -187,10 +188,10 @@ const loadData = async () => {
                         </div>
 
                         <!-- cpu -->
-                        <row-resource @loadData="loadData" class="res-item" type="cpu" :resources="resources"></row-resource>
+                        <row-resource v-if="currentNetwork.chain !== 'dfs'" @loadData="loadData" class="res-item" type="cpu" :resources="resources"></row-resource>
 
                         <!-- net -->
-                        <row-resource @loadData="loadData" class="res-item" type="net" :resources="resources"></row-resource>
+                        <row-resource v-if="currentNetwork.chain !== 'dfs'" @loadData="loadData" class="res-item" type="net" :resources="resources"></row-resource>
 
                         <!-- ram -->
                         <row-ram @loadData="loadData" class="res-item" :ramprice="ramprice" :memory="memory"></row-ram>

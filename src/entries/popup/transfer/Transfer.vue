@@ -184,7 +184,7 @@ const checkSubmit = () => {
                                     :precision="transfer.token.precision"
                                     :step="0.1"
                                     :max="targeMaxAmount"
-                                    :placeholder="targeMaxAmount + ' ' + transfer.token.symbol"
+                                    :placeholder="targeMaxAmount + ''"
                                 />
                                 <n-button
                                     @click="

@@ -44,9 +44,11 @@ export const useWalletStore = defineStore('wallet', {
 
     actions: {
         async init() {
+            console.log('store wallet init');
             this.wallets = (await localCache.get('wallets', [])) as Wallet[];
             this.selectedIndex = (await localCache.get('selectedIndex', 0)) as number;
             this.recentTransfers = (await localCache.get('recentTransfers', [])) as TransferRecord[];
+            this.userTokens = (await localCache.get('userTokens', {}));
             this.allTokens = await initTokens();
             
         },
@@ -70,7 +72,6 @@ export const useWalletStore = defineStore('wallet', {
                 useChainStore().setCurrentNetworkByChainId(wallet.chainId);
                 await localCache.set('selectedIndex', index);
             }
-            
         },
         async setAllTokens(tokens: AllTokens) {
             this.allTokens = tokens;
@@ -146,14 +147,15 @@ const getTokensFromJson = (tokenArray: Coin[]) : AllTokens => {
             tokenMap[token.chain] = [];
         }
         const name = `${token.chain}/${token.contract}-${token.symbol}.png`.toLowerCase();
-        token.logo = 'https://cdn.jsdelivr.net/gh/metahubwallet/eos-tokens@master/logos/' + name;
+        // token.logo = 'https://cdn.jsdelivr.net/gh/metahubwallet/eos-tokens@master/logos/' + name;
+        token.logo = 'https://raw.githubusercontent.com/dfstool/dfs-tokens/master/logos/' + name;
         tokenMap[token.chain].push(token);
     }
     return tokenMap;
 };
 
 const updateTokens = () => {
-    const url = 'https://cdn.jsdelivr.net/gh/metahubwallet/eos-tokens@master/tokens.json';
+    const url = 'https://raw.githubusercontent.com/dfstool/dfs-tokens/master/tokens.json';
     axios
         .get(url)
         .then(function(response) {

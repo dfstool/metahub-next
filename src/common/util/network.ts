@@ -1,8 +1,20 @@
 import { Network } from "@/types/settings";
 
 export const eosChainId = 'aca376f206b8fc25a6ed44dbdc66547c36c6c33e3a119ffbeaef943642f0e906';
+export const dfsChainId = '000d9cae502dd1cc895745e204f83cc892bc4c450f92a03ecd4fe057709853cc';
 
 export const supportNetworks: Network[] = [
+    {
+        name: 'DFS',
+        chain: 'dfs',
+        chainId: dfsChainId,
+        endpoint: 'https://api.dfs.land',
+        token: {
+            contract: 'eosio.token',
+            symbol: 'DFS',
+            precision: 8,
+        },
+    },
     {
         name: 'EOS',
         chain: 'eos',
@@ -99,7 +111,7 @@ export const supportNetworks: Network[] = [
         endpoint: 'https://boscore.eosrio.io',
         token: {
             contract: 'eosio.token',
-            symbol: 'EOS',
+            symbol: 'BOS',
             precision: 4,
         },
     },
@@ -110,7 +122,7 @@ export const supportNetworks: Network[] = [
         endpoint: 'https://testnet.telos.net',
         token: {
             contract: 'eosio.token',
-            symbol: 'EOS',
+            symbol: 'TLOS',
             precision: 4,
         },
     },
@@ -121,8 +133,8 @@ export const supportNetworks: Network[] = [
         endpoint: 'https://testnet.wax.pink.gg',
         token: {
             contract: 'eosio.token',
-            symbol: 'EOS',
-            precision: 4,
+            symbol: 'WAX',
+            precision: 8,
         },
     },
     {
@@ -144,7 +156,7 @@ export const getNetworkLocalIcon = (chain: string = 'eos', active = true) => {
     network = network.replace('-test', '');
 
     // 是否为支持network
-    const networks = ['bos', 'jungle', 'telos', 'kylin', 'wax', 'lynx', 'meet', 'proton'];
+    const networks = ['dfs', 'bos', 'jungle', 'telos', 'kylin', 'wax', 'lynx', 'meet', 'proton'];
     let isExist = networks.findIndex((item) => item === network);
     let icon = '';
     if (isExist === -1) icon = 'eos';

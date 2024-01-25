@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { eosChainId, getNetworkLocalIcon } from '@/common/util/network';
+import { eosChainId, dfsChainId, getNetworkLocalIcon } from '@/common/util/network';
 import { sha256, md5, decrypt, encrypt } from '@/common/util/crypto';
 import bs58 from 'bs58';
 import { Address } from 'ethereumjs-util';
@@ -7,13 +7,14 @@ import chain from '@/common/lib/chain';
 import { getKeyAccounts, lightKey } from '@/common/lib/remote';
 import { isValidPrivate, privateToPublic } from '@/common/lib/keyring';
 import { Wallet } from '@/types/wallet';
+import { debounce } from 'lodash';
 
 const { t } = useI18n();
 const route = useRoute();
 
 // get network
 const { networks } = useChainStore();
-const chainId = ref(route.query.chainId ? (route.query.chainId as string) : eosChainId);
+const chainId = ref(route.query.chainId ? (route.query.chainId as string) : dfsChainId);
 const activeIndex = ref(networks.findIndex((item) => item.chainId === chainId.value));
 const showPopover = ref(false);
 const getNetworkIcon = (chainId: string) => {
@@ -29,6 +30,52 @@ watch(
     },
     { immediate: true }
 );
+
+//check account
+const accountStatus = ref();
+const accountInfo = ref();
+const dfsAccount = ref('');
+const checkAccount = debounce(async (value: string) => {
+    const regexp = /^[a-z1-5.]+$/;
+    if (!regexp.test(value)) {
+        if (value.trim().length === 0) {
+            accountStatus.value = undefined
+        } else {
+            accountStatus.value = 'error'
+        }
+    } else {
+        const network = useChainStore().networks.find((x) => x.chainId == chainId.value)!;
+        accountInfo.value = await chain.getApi(network?.chainId).getAccount(value);
+        if (accountInfo.value) {
+            accountStatus.value = 'success'
+        } else {
+            accountStatus.value = 'error'
+        }
+    }
+}, 500);
+const checkPublicKey = (publicKey: string) => {
+    const purePublicKey: string = publicKey.substring(3);
+    const perms = accountInfo.value.permissions;
+    const publicKeys: string[] = [];
+    perms.forEach((perm: any) => {
+        const keys = perm.required_auth.keys;
+        if (keys.length) {
+            keys.forEach((item: any) => {
+                if (item.key.startsWith("EOS")) {
+                    publicKeys.push(item.key.substring(3))
+                } else if (item.key.startsWith("PUB_K1_")) {
+                    publicKeys.push(item.key.substring(7))
+                }
+            })
+        }
+    })
+
+    if (publicKeys.includes(purePublicKey)) {
+        return true
+    }
+
+    return false
+}
 
 // import wallet
 const checked = ref(true);
@@ -80,19 +127,24 @@ const handleImportKey = async () => {
             keys: [],
         };
 
-
         const publicKey = privateToPublic(privateKey.value);
         const privateValue = encrypt(privateKey.value, md5(chainAccount.seed + useUserStore().password));
         const key = { publicKey, privateKey: privateValue, permissions: [] };
         chainAccount.keys = [key];
         try {
             let accounts: string[] = [];
-            try {
-                accounts = await getKeyAccounts(network?.chain as lightKey, publicKey);
-            } catch (_e) {}
+            if (network.chain === 'dfs') {
+                if (checkPublicKey(publicKey)) {
+                    accounts.push(dfsAccount.value)
+                }
+            } else {
+                try {
+                    accounts = await getKeyAccounts(network?.chain as lightKey, publicKey);
+                } catch (_e) {}
 
-            if (accounts.length == 0) {
-                accounts = await chain.getApi(network?.chainId).getKeyAccounts(publicKey);
+                if (accounts.length == 0) {
+                    accounts = await chain.getApi(network?.chainId).getKeyAccounts(publicKey);
+                }                
             }
 
             if (accounts.length == 0) {
@@ -119,8 +171,6 @@ const handleImportKey = async () => {
                 }
             }
         } catch (e) {
-            console.log(1123);
-
             console.log(e);
             window.msg.error(e);
             isLoading.value = false;
@@ -146,8 +196,10 @@ const router = useRouter();
 const privateKey = ref('');
 const importWallet = async (wallets: Wallet[]) => {
     isLoading.value = true;
-
-
+    const firstWallet = wallets[0];
+    //需要前提设置currentNetwork的值，否则setWallets会引起渲染，导致CoinList的数据不正确
+    useChainStore().setCurrentNetworkByChainId(firstWallet.chainId)
+    
     const newWallets = [...useWalletStore().wallets, ...wallets].sort(sortAccounts);
     useWalletStore().setWallets(newWallets);
 
@@ -156,7 +208,6 @@ const importWallet = async (wallets: Wallet[]) => {
         await chain.fetchPermissions(wallet.name, wallet.chainId);
     }
 
-    const firstWallet = wallets[0];
     let index = useWalletStore().wallets.indexOf(firstWallet);
     useWalletStore().setSelectedIndex(index >= 0 ? index : 0);
     // useChainStore().setCurrentNetwork(networks[activeIndex.value]);
@@ -182,11 +233,12 @@ const sortAccounts = (first: any, second: any) => {
     if (first.chainId == second.chainId) {
         return first.name > second.name ? 1 : -1;
     } else {
-        if (first.chainId == eosChainId) return -1;
-        if (second.chainId == eosChainId) return 1;
+        if (first.chainId == dfsChainId) return -1;
+        if (second.chainId == dfsChainId) return 1;
         return first.chainId > second.chainId ? 1 : -1;
     }
 };
+
 </script>
 
 <template>
@@ -223,7 +275,15 @@ const sortAccounts = (first: any, second: any) => {
                             </span>
                         </div>
                     </n-popover>
-
+                    <div class="import-key-tip">{{ $t('public.importAccountTip') }}:</div>
+                    <n-input
+                        maxlength="12"
+                        :placeholder="$t('public.importAccountTip')"
+                        class="import-key-input"
+                        v-model:value="dfsAccount"
+                        @update:value="checkAccount"
+                        :status="accountStatus"
+                    ></n-input>
                     <div class="import-key-tip">{{ $t('public.importKeyTip') }}:</div>
                     <n-input
                         :autosize="{ minRows: 5, maxRows: 5 }"

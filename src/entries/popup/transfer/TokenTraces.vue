@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import EOSIcon from '@/assets/images/eos_icon.png';
+import DFSIcon from '@/assets/images/dfs_icon.png';
 import CoinGet from '@/assets/images/coin_get@2x.png';
 import CoinOut from '@/assets/images/coin_out@2x.png';
 import chain from '@/common/lib/chain';
@@ -83,9 +84,9 @@ const viewTransation = (item: any) => {
                         <div class="coin-icon">
                             <div class="icon-left">
                                 <img
-                                    :src="token.logo ? token.logo : EOSIcon"
+                                    :src="token.logo ? token.logo : DFSIcon"
                                     class="icon-img"
-                                    @error.once="($event.target as HTMLImageElement).src = EOSIcon"
+                                    @error.once="($event.target as HTMLImageElement).src = DFSIcon"
                                 />
 
                                 <div class="icon-name">{{ token.symbol }}</div>

@@ -14,6 +14,7 @@ export default {
         importKey: '导入钱包秘钥',
         noAccountTip: '如果您没有EOS账号，点击这里查看如何注册',
         importKeyTip: '请输入您的钱包密钥',
+        importAccountTip: '请输入您的钱包账号',
         importNetTip: '选择网络',
         importAccount: '+ 导入账号',
         importWallet: '导入钱包',

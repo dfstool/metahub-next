@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import EOSIcon from '@/assets/images/eos_icon.png';
+// import EOSIcon from '@/assets/images/eos_icon.png';
+import DFSIcon from '@/assets/images/dfs_icon.png';
 import ErrorIcon from '@/assets/images/placeholder.png';
 import ErrorCoinImg from '@/assets/images/placeholder.png';
 import { eosChainId } from '@/common/util/network';
@@ -16,7 +17,6 @@ const isLoading = ref(false);
 const tokens = ref<Balance[]>([]);
 const walletStore = useWalletStore();
 const emit = defineEmits(['isLoading', 'setUnit', 'setAmount']);
-
 onMounted(async () => {
     await loadTokens();
 });
@@ -37,7 +37,6 @@ watch(isLoading, () => {
 const loadTokens = async () => {
     if (isLoading.value) return;
     isLoading.value = true;
-
     if (walletStore.currentUserTokens.length == 0) {
         walletStore.setCurrentUserTokens([
             {
@@ -52,6 +51,7 @@ const loadTokens = async () => {
     getCoinsLogo(tokens.value);
     await getUserBalance();
     await handleGetEosPrice();
+    await handleGetMarkets();
     await getWalletCache();
     isLoading.value = false;
 };
@@ -108,6 +108,38 @@ const handleGetEosPrice = async () => {
     }
 };
 
+// 获取Markets
+const handleGetMarkets = async () => {
+    if (chainStore.currentNetwork.chain === 'dfs') {
+        const markets = await chain.getApi().getMarkets();
+        let sumAmount = 0;
+        tokens.value.forEach(token => {
+            if (token.amount === 0) return;
+            const market = markets.find(market => {
+                if ((market.contract0 === token.contract || market.contract1 === token.contract) &&
+                   (market.contract0 === "usdtusdtusdt" || market.contract1 === "usdtusdtusdt")) {
+                    return true;
+                } else {
+                    return false;
+                }
+            })
+
+            if (market) {
+                const reserve0 = Number(market.reserve0.split(" ")[0])
+                const reserve1 = Number(market.reserve1.split(" ")[0])
+                if (market.contract0 === "usdtusdtusdt") {
+                    sumAmount += reserve0 / reserve1 * token.amount;
+                } else {
+                    sumAmount += reserve1 / reserve0 * token.amount;
+                }
+            }
+        })
+
+        emit('setUnit', 'usd');
+        emit('setAmount', sumAmount.toFixed(4));
+    }
+};
+
 // 获取WalletCache
 const getWalletCache = async () => {
     let rexEOS = 0.0;
@@ -155,13 +187,14 @@ const handleViewCoin = (item: Coin) => {
         </div>
 
         <!-- body -->
-        <n-scrollbar style="max-height: 277px">
+        <!-- 这里由277改成270，让滚动条不显示 -->
+        <n-scrollbar style="max-height: 270px">
             <div @click="handleViewCoin(item)" class="resource-item" v-for="(item, index) of tokens" :key="index">
                 <div class="resource-item-left">
                     <img
                         :src="
-                            chainStore.currentChain == 'eos' && item.contract === 'eosio.token'
-                                ? EOSIcon
+                            chainStore.currentChain == 'dfs' && item.contract === 'eosio.token'
+                                ? DFSIcon
                                 : item.logo
                                 ? item.logo
                                 : ErrorIcon
@@ -177,7 +210,7 @@ const handleViewCoin = (item: Coin) => {
             </div>
         </n-scrollbar>
 
-        <token-selector :is-show="showAddToken" @close="showAddToken = false"></token-selector>
+        <token-selector :is-show="showAddToken" @close="showAddToken = false; loadTokens()"></token-selector>
     </div>
 </template>
 
@@ -188,7 +221,7 @@ const handleViewCoin = (item: Coin) => {
     height: auto;
     border-top: 8px solid #fff;
     margin-top: 12px;
-    padding-bottom: 80px;
+    // padding-bottom: 80px;
     .list-header-div {
         margin: 0px 0px;
         font-size: 16px;

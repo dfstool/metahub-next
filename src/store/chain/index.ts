@@ -1,8 +1,8 @@
-import { eosChainId } from '@/common/util/network';
+import { eosChainId, dfsChainId } from '@/common/util/network';
 import { ChainState } from './type';
 import { supportNetworks } from '@/common/util/network';
 import { Network, RPC } from '@/types/settings';
-
+import { Wallet } from '@/types/wallet';
 
 export const useChainStore = defineStore('chain', {
     state: (): ChainState => {
@@ -16,10 +16,10 @@ export const useChainStore = defineStore('chain', {
 
     getters: {
         currentChain: (state) : string => {
-            return state.currentNetwork.chain || 'eos';
+            return state.currentNetwork.chain || 'dfs';
         },
         currentChainId: (state) : string => {
-            return state.currentNetwork.chainId || eosChainId;
+            return state.currentNetwork.chainId || dfsChainId;
         },
         findNetwork: (state) => (chainId: string) : Network => {
             const network = state.networks.find((x) => x.chainId == chainId);
@@ -35,13 +35,20 @@ export const useChainStore = defineStore('chain', {
         },
         currentSymbol: (state) => {
             const network = state.networks.find((x: Network) => x.chainId == state.currentNetwork.chainId);
-            return network ? network.token.symbol : 'EOS';
+            return network ? network.token.symbol : 'DFS';
         },
     },
     actions: {
         async init() {
-            this.networks = (await localCache.get('networks', supportNetworks.slice(0, 3))) as Network[];
-            this.currentNetwork = this.networks[0];
+            console.log('store chain init');
+            const wallets = (await localCache.get('wallets', [])) as Wallet[];
+            const selectedIndex = (await localCache.get('selectedIndex', 0)) as number;
+            this.networks = (await localCache.get('networks', supportNetworks.slice(0, 1))) as Network[];
+            if (wallets.length) {
+                this.setCurrentNetworkByChainId(wallets[selectedIndex].chainId);
+            } else {
+                this.currentNetwork = this.networks[0];
+            }
             this.selectedRpcs = (await localCache.get('selectedRpcs', {}));
             this.customRpcs = (await localCache.get('customRpcs', {}));
         },

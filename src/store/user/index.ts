@@ -19,7 +19,7 @@ export const useUserStore =  defineStore('user', {
 
     actions: {
         async init() {
-            console.log('call init');
+            console.log('store user init');
             const result: any = (await chrome.storage.session.get(['password'])) ?? {};
             this.password = result.password as string || '';
             this.passhash = (await localCache.get('passhash', '')) as string;

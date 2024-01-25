@@ -13,9 +13,9 @@ const network = reactive({
     chainId: '',
     endpoint: '',
     token: {
-        symbol: 'EOS',
+        symbol: 'DFS',
         contract: 'eosio.token',
-        precision: 4,
+        precision: 8,
     },
 });
 const tokenDiy = ref(false);

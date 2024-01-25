@@ -35,6 +35,7 @@ watch(
     <div v-if="!userStore.isLock" class="bg">
         <top-nav @change-account="showAccountSelector = true"></top-nav>
 
+        <!-- 显示路由对应的信息，这里显示的是@/entries/popup/wallet/index.vue        -->
         <div class="app-content">
             <router-view  class="animate__animated" :class="`animate__${transitionName}`" v-slot="{ Component }">
                 <keep-alive :include="['wallet']">

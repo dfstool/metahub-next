@@ -61,6 +61,22 @@ export default class EOSApi {
         }
     }
 
+    // 获取Markets
+    async getMarkets() {
+        try {
+            let res = await this.rpc.get_table_rows({
+                json: true,
+                code: 'swapswapswap',
+                scope: 'swapswapswap',
+                table: 'markets',
+                limit: 1000
+            });
+            return res.rows;
+        } catch (e) {
+            return [];
+        }
+    }
+
     // 通过公钥查询账号
     async getKeyAccounts(publicKey: string) {
         try {
@@ -428,7 +444,6 @@ export default class EOSApi {
     async transact(transaction: Transaction, options: any = {}, ignoreCPUProxy: boolean = false) {
         let currentAccount = this.chain.currentAccount();
         let isProxy = currentAccount.smoothMode;
-
         // 是否为充值CPU
         if (transaction.actions[0].name == 'transfer' && transaction.actions[0].account == 'eosio.token') {
             if (transaction.actions[0].data.to == '1stbillpayer') {

@@ -1,12 +1,13 @@
 <script lang="ts" setup>
 import _ from 'lodash';
-import { eosChainId, supportNetworks } from '@/common/util/network';
+import { eosChainId, dfsChainId, supportNetworks } from '@/common/util/network';
 import { Network } from '@/types/settings';
 
 const { t } = useI18n();
 const router = useRouter();
 
 const eChainId = ref(eosChainId);
+const dChainId = ref(dfsChainId);
 
 // 添加网络前置操作
 const chainStore = useChainStore();
@@ -119,7 +120,7 @@ const removeNetwork = (network: Network) => {
                                         fill="#e53e30"
                                         :strokeWidth="3"
                                         class="cursor-pointer"
-                                        v-show="networkExists(network.chainId) && network.chainId != eChainId"
+                                        v-show="networkExists(network.chainId) && network.chainId != dChainId"
                                         @click="handleRemove(network)"
                                     />
                                 </td>

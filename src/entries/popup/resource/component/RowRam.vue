@@ -14,15 +14,18 @@ const action = ref('');
 const placeholder = ref('');
 const modalTitle = ref('');
 const modalVisible = ref(false);
+const precision = ref(4)
 const beforeSubmit = async (value: string) => {
     action.value = value;
 
     if (value == 'buyRam') {
-        placeholder.value = props.memory.core_liquid_balance;
+        placeholder.value = props.memory.core_liquid_balance.split(" ")[0];
         modalTitle.value = t('resource.buy') + ' ' + t('resource.ram');
+        precision.value = currentNetwork.token.precision;
     } else if (value == 'sellRam') {
-        placeholder.value = ((props.memory.use_limit.max - props.memory.use_limit.used) / 1024).toFixed(4) + ' KB';
+        placeholder.value = ((props.memory.use_limit.max - props.memory.use_limit.used) / 1024).toFixed(4);
         modalTitle.value = t('resource.sell') + ' ' + t('resource.ram');
+        precision.value = 4
     }
     modalVisible.value = true;
 };
@@ -33,7 +36,7 @@ const receiver = ref(walletStore.currentWallet.name);
 // 提交表单
 const inputValue = ref(0);
 const submitLoading = ref(false);
-const { currentSymbol } = useChainStore();
+const { currentSymbol, currentNetwork } = useChainStore();
 const emit = defineEmits(['loadData']);
 const onSubmit = async () => {
     if (!receiver.value) return window.msg.warning(t('wallet.emptyReceiver'));
@@ -107,7 +110,7 @@ const onSubmit = async () => {
             <div class="content-line line1">
                 <div class="item">
                     <span>{{ $t('resource.price') }}</span>
-                    <span class="small">{{ props.ramprice.toFixed(4) }} {{ currentSymbol }}/KB</span>
+                    <span class="small">{{ props.ramprice.toFixed(currentNetwork.token.precision) }} {{ currentSymbol }}/KB</span>
                 </div>
             </div>
 
@@ -132,12 +135,12 @@ const onSubmit = async () => {
                     :placeholder="placeholder"
                     v-model:value="inputValue"
                     :min="0"
-                    :precision="4"
+                    :precision="precision"
                     :step="0.1"
                     clearable
                 >
                     <template #suffix>
-                        <span class="text-gray-400 text-sm">EOS</span>
+                        <span class="text-gray-400 text-sm">{{ action === 'buyRam'? currentNetwork.token.symbol: 'KB' }}</span>
                     </template>
                 </n-input-number>
             </div>
@@ -174,7 +177,7 @@ const onSubmit = async () => {
                 flex-direction: row;
                 border-bottom: 1px solid $color-separate;
                 .item {
-                    width: 50%;
+                    width: 60%;
                     height: 28px;
                     line-height: 28px;
                     font-size: 12px;

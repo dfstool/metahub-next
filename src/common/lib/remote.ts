@@ -18,6 +18,7 @@ const lightApis = {
 };
 
 const hyperionApis = {
+    dfs: 'https://api.dfs.land', 
     eos: 'https://eos.hyperion.eosrio.io', //https://api.eossweden.org/v2
     bos: 'https://api.bossweden.org',
     wax: 'https://wax.eosrio.io',
@@ -43,6 +44,7 @@ export type lightKey =
     | 'proton-test';
 
 type hyperionKey =
+    | 'dfs'
     | 'eos'
     | 'bos'
     | 'wax'

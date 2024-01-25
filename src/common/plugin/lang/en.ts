@@ -15,6 +15,7 @@ export default {
         importKey: 'Import pravite key',
         noAccountTip: "If you don't have private key, clicked here!",
         importKeyTip: 'Import your account private key',
+        importAccountTip: 'Import your account name',
         importNetTip: 'Choose Network',
         importAccount: '+ Import Account',
         importWallet: 'Import Wallet',

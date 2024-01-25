@@ -8,6 +8,7 @@ export const useSettingStore = defineStore('setting', {
     }),
     actions: {
         async init() {
+            console.log('store setting init');
         },
         async setLang(lang: 'zh-CN' | 'en') {
             this.language = lang;

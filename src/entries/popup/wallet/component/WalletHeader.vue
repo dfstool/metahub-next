@@ -18,7 +18,7 @@ const totalValue = computed(() => {
 const router = useRouter();
 const handleViewTransfer = () => {
     const eosToken = useWalletStore().currentUserTokens.find(
-        (i) => i.contract === 'eosio.token' && i.symbol === 'EOS'
+        (i) => i.contract === 'eosio.token' && i.symbol === 'DFS'
     );
     router.push({
         name: 'transfer',
