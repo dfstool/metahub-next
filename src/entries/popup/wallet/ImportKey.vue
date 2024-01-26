@@ -123,7 +123,7 @@ const handleImportKey = async () => {
             chainId: network.chainId,
             seed,
             blockchain: 'eos',  // eth, eth ...
-            smoothMode: false,
+            smoothMode: network.chain === 'dfs'? true: false,
             keys: [],
         };
 

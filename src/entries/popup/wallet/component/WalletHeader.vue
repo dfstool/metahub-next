@@ -122,6 +122,10 @@ const handleViewTransfer = () => {
         height: 100%;
         font-size: 11px;
         color: #222;
+        div {
+            margin-top: 6px;
+            font-size: 14px;
+        }
     }
 }
 </style>

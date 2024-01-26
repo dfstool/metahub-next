@@ -187,6 +187,17 @@ const loadData = async () => {
                             </div>
                         </div>
 
+                        <div class="res-header" v-show="currentNetwork.chain === 'dfs'">
+                            <!-- smooth mode -->
+                            <div class="smooth-mode" :class="{ on: smoothMode }" style="width: 100%; height: auto">
+                                <!-- smoothMode switch -->
+                                <div class="line1">
+                                    <div class="title">{{ $t('resource.smoothMode') }}</div>
+                                    <n-switch style="display: block" v-model:value="smoothMode" active-color="#C02BFC" @change="changeSmoothMode"></n-switch>
+                                </div>
+                            </div>
+                        </div>
+
                         <!-- cpu -->
                         <row-resource v-if="currentNetwork.chain !== 'dfs'" @loadData="loadData" class="res-item" type="cpu" :resources="resources"></row-resource>
 
@@ -282,6 +293,13 @@ const loadData = async () => {
                 color: #c02bfc;
             }
         }
+        .title {
+        font-size: 16px;
+        color: #222;
+        letter-spacing: 0;
+        line-height: 58px;
+        font-weight: bold;
+    }
     }
 }
 </style>

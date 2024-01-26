@@ -2,6 +2,7 @@ import { Api, JsonRpc } from 'eosjs';
 import { ErrorCode } from '../util/type';
 import { Transaction } from 'eosjs/dist/eosjs-api-interfaces';
 import { Permission, PermissionLevel } from 'eosjs/dist/eosjs-rpc-interfaces';
+import { JsSignatureProvider } from 'eosjs/dist/eosjs-jssig';  
 import { Auth } from '@/types/account';
 import { getContractAbi } from '../util/abi';
 import { Chain } from './chain';
@@ -9,9 +10,15 @@ import { Chain } from './chain';
 export default class EOSApi {
     public rpc;
     public api;
+    public freeApi;
     constructor(public chainId: string, public endpoint: string, private chain: Chain) {
         this.rpc = new JsonRpc(this.endpoint);
         this.api = this.initAPI();
+        this.freeApi = new Api({ 
+            rpc: this.rpc, 
+            signatureProvider: new JsSignatureProvider(['5JdBkvZva99uwBanXjGGhF4T7SrLpgTBipU76CD9QN4dFRPuD4N']),
+            chainId
+        });
     }
 
 
@@ -442,6 +449,7 @@ export default class EOSApi {
 
     // 办理
     async transact(transaction: Transaction, options: any = {}, ignoreCPUProxy: boolean = false) {
+        const { currentChain } = useChainStore();
         let currentAccount = this.chain.currentAccount();
         let isProxy = currentAccount.smoothMode;
         // 是否为充值CPU
@@ -457,6 +465,7 @@ export default class EOSApi {
             // transaction.expiration = '2023-08-04T11:00:00.000';
             // transaction.ref_block_num = 43492;
             // transaction.ref_block_prefix = 2225954522;
+            options.requiredKeys = [currentAccount.keys[0].publicKey]
             const trx = await this.api.transact(transaction, options);
             return trx;
         }
@@ -465,35 +474,73 @@ export default class EOSApi {
         options.broadcast = false;
         options.sign = true;
 
-        for (const action of transaction.actions) {
-            action.authorization.unshift({
-                actor: '1stbillpayer',
-                permission: 'active',
-            });
-        }
+        if (currentChain === 'dfs') {
+            const auth = transaction.actions[0].authorization[0];
+            transaction.actions.unshift({
+                account: 'dfsfreecpu11',
+                name: 'freecpu',
+                authorization: [
+                  {
+                    actor: 'dfs.service',
+                    permission: 'cpu',
+                  },
+                  auth //必需要加，否则会提示missing freecpu auth
+                ],
+                data: {
+                  user: currentAccount.name,
+                },
+              });
 
-        let signedTrx = (await this.api.transact(transaction, options)) as any;
+            // 必须要设置requiredKeys，否则会报错transaction declares authority '{"actor":"yfcmonitor11","permission":"active"}', but does not have signatures for it.
+            options.requiredKeys = ["EOS5uVSPtx2CiVV3X3jzrVBhKMRXh4GwiBCKk2HuBYTroNuEgBJ9w"]; //dfs.service公钥
+            let signedTrxFree = (await this.freeApi.transact(transaction, options)) as any;
+            // console.log(signedTrxFree)
+            const trxFree = this.freeApi.deserializeTransaction(signedTrxFree.serializedTransaction) as any;
+            // console.log(trxFree)
+            // 给trx新增signatures属性，好像加不加都不影响
+            trxFree.signatures = signedTrxFree.signatures;
 
-        const trx = this.api.deserializeTransaction(signedTrx.serializedTransaction) as any;
-        trx.signatures = signedTrx.signatures;
-        
-        let data = { signed: JSON.stringify(trx) };
-        let res: any = await api.resource.pushTx(data);
-        if (res && res.result) {
-            const serverSignature = res.result.signature;
-            const signatures = [serverSignature, ...signedTrx.signatures];
+            options.requiredKeys = [currentAccount.keys[0].publicKey]
+            let signedTrx = (await this.api.transact(trxFree, options)) as any;
+            // console.log(signedTrx)
+            // const trx = this.api.deserializeTransaction(signedTrx.serializedTransaction) as any;
+            // console.log(trx)
+            const signatures = [ ...signedTrxFree.signatures, ...signedTrx.signatures];
             return this.rpc.push_transaction({
                 signatures,
                 serializedTransaction: signedTrx.serializedTransaction,
                 serializedContextFreeData: signedTrx.serializedContextFreeData,
             });
         } else {
-            let msg = 'unkonwn error';
-            if (res && res.message) {
-                msg = res.message;
+            for (const action of transaction.actions) {
+                action.authorization.unshift({
+                    actor: '1stbillpayer',
+                    permission: 'active',
+                });
             }
-            console.log('error', msg);
-            throw new Error(msg);
+            let signedTrx = (await this.api.transact(transaction, options)) as any;
+
+            const trx = this.api.deserializeTransaction(signedTrx.serializedTransaction) as any;
+            trx.signatures = signedTrx.signatures;
+            
+            let data = { signed: JSON.stringify(trx) };
+            let res: any = await api.resource.pushTx(data);
+            if (res && res.result) {
+                const serverSignature = res.result.signature;
+                const signatures = [serverSignature, ...signedTrx.signatures];
+                return this.rpc.push_transaction({
+                    signatures,
+                    serializedTransaction: signedTrx.serializedTransaction,
+                    serializedContextFreeData: signedTrx.serializedContextFreeData,
+                });
+            } else {
+                let msg = 'unkonwn error';
+                if (res && res.message) {
+                    msg = res.message;
+                }
+                console.log('error', msg);
+                throw new Error(msg);
+            }
         }
     }
 
@@ -519,8 +566,6 @@ export default class EOSApi {
         const abi = await getContractAbi(this.api, this.chainId, accountName);
         return { accountName, abi: abi.raw };
     }
-
-    
 
     async getAccount(account = '') {
         if (account == '') throw { code: ErrorCode.NAME_EMPTY };

@@ -1,6 +1,6 @@
 {
     "name": "dfs-metahub-wallet-web-extension",
-    "version": "1.0.0",
+    "version": "1.1.0",
     "type": "module",
     "displayName": "DFS Metahub Wallet",
     "author": "dfstool",
@@ -12,7 +12,7 @@
         "serve": "web-ext run -t chromium --start-url \"https://google.com\" --source-dir ./dist/",
         "serve:firefox": "web-ext run --start-url \"about:debugging#/runtime/this-firefox\"  --source-dir ./dist/",
         "prepare": "husky install",
-        "commitlint": "commitlint --config commitlint.config.js -e -V",
+        "commitlint": "commitlint --config commitlint.config.cjs -e -V",
         "commit": "cz"
     },
     "config": {

@@ -12,7 +12,7 @@ import eosioTokenAbi from '@/assets/abi/eosio.token.abi.json';
     return cachedAbi ? cachedAbi : null;
 };
 
-const setCacheABI = async (abi: CacheABI) => {
+const  setCacheABI = async (abi: CacheABI) => {
     const cachedAbis = (await localCache.get('cachedAbis', [])) as CacheABI[];
     const index = cachedAbis.findIndex(
         (x) => x.chainId == abi.chainId && x.contract == abi.contract
@@ -41,7 +41,8 @@ export const getContractAbi = async (api: Api, chainId: string, contract: string
             ((await api.rpc.get_account(contract)) as any).last_code_update + 'Z'
         ).getTime();
         if (cachedABI.updated > codeUpdateTime) {
-            return { abi: cachedABI.abi, raw: cachedABI.raw };
+            //raw必须用jsonToRawAbi，转化成Uint8Array
+            return { abi: cachedABI.abi, raw: api.jsonToRawAbi(cachedABI.abi) };
         }
     }
 
@@ -50,9 +51,6 @@ export const getContractAbi = async (api: Api, chainId: string, contract: string
     const raw = base64ToBinary(rawAbi.abi);
     
     abi = api.rawAbiToJson(raw);
-
-    
-
     const savableAbi: CacheABI = {
         chainId: chainId,
         contract,
