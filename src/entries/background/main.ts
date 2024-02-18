@@ -20,6 +20,7 @@ import { Auth, AuthAccount, AuthorizedData } from '@/types/account';
 import { Wallet } from '@/types/wallet';
 import { eosChainId, dfsChainId } from '@/common/util/network';
 import { getContractAbi } from '@/common/util/abi';
+import { supportNetworks } from '@/common/util/network';
 
 console.log('add listeners', (new Date().toLocaleString()));
 
@@ -243,7 +244,7 @@ async function getEndPoint(chainId: string) {
     let endpoint = selectedRpcs[chainId];
 
     if (!endpoint) {
-        const networks = (await localCache.get('networks', [])) as Network[];
+        const networks = (await localCache.get('networks', supportNetworks.slice(0, 1))) as Network[];
         const network = networks.find((x) => x.chainId == chainId);
         endpoint = network ? network.endpoint : '';
     }
