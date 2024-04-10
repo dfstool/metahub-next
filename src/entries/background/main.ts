@@ -326,6 +326,9 @@ async function requestSignature(payload: SignaturePayload | ArbitrarySignaturePa
         throw SdkError.signatureError('signature_rejected', 'unknow your operation');
     }
 
+    if (authAccounts.length) {
+        account = authorizations[0];
+    }
     if (!account) {
         throw SdkError.signatureError('signature_rejected', 'you have no permission for this operation');
     }
